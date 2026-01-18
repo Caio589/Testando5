@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Painel ADM - DANDRENKS</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body{
+    background:#111;
+    color:#fff;
+    font-family:Arial;
+    padding:20px;
+}
+h1{
+    text-align:center;
+    color:#FFD400;
+}
+input{
+    width:100%;
+    padding:10px;
+    margin:5px 0;
+    border:none;
+    border-radius:6px;
+}
+button{
+    width:100%;
+    padding:12px;
+    background:#FFD400;
+    color:#000;
+    border:none;
+    margin-top:10px;
+    font-size:18px;
+    border-radius:8px;
+    font-weight:bold;
+}
+.card{
+    background:#222;
+    padding:15px;
+    border-radius:12px;
+    margin-top:20px;
+}
+</style>
+</head>
+<body>
+
+<h1>PAINEL ADMINISTRATIVO</h1>
+
+<div class="card">
+    <h2>Cadastrar / Editar Lanches</h2>
+    <label>Nome do lanche:</label>
+    <input type="text" id="nome" placeholder="Ex: X-Salada">
+
+    <label>Preço (somente número):</label>
+    <input type="number" id="preco" placeholder="25">
+
+    <button onclick="adicionarLanche()">Adicionar / Atualizar</button>
+</div>
+
+<div class="card">
+    <h2>Lanches cadastrados</h2>
+    <div id="lista"></div>
+</div>
+
+<script>
+let lanches = JSON.parse(localStorage.getItem("lanches")) || [];
+
+function salvar(){
+    localStorage.setItem("lanches", JSON.stringify(lanches));
+    listar();
+}
+
+function adicionarLanche(){
+    let nome = document.getElementById("nome").value;
+    let preco = document.getElementById("preco").value;
+
+    if(!nome || !preco){
+        alert("Preencha todos os campos");
+        return;
+    }
+
+    let existente = lanches.find(l => l.nome.toLowerCase() === nome.toLowerCase());
+
+    if(existente){
+        existente.preco = preco;
+    } else {
+        lanches.push({nome:nome, preco:preco});
+    }
+
+    salvar();
+    document.getElementById("nome").value = "";
+    document.getElementById("preco").value = "";
+}
+
+function remover(index){
+    lanches.splice(index,1);
+    salvar();
+}
+
+function listar(){
+    let box = document.getElementById("lista");
+    box.innerHTML = "";
+
+    lanches.forEach((l, i)=>{
+        box.innerHTML += `
+            <div style='background:#333;padding:10px;margin-top:10px;border-radius:8px;'>
+                <b>${l.nome}</b> — R$${l.preco}
+                <button style='margin-top:5px;background:#ff4444;color:#fff;padding:5px;border:none;border-radius:6px;'
+                onclick='remover(${i})'>Remover</button>
+            </div>
+        `;
+    });
+}
+
+listar();
+</script>
+
+</body>
+</html>
