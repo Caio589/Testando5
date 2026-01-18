@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>DANDRENKS - Cardápio Digital</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: url('https://images.unsplash.com/photo-1550547660-d9450f859349') no-repeat center center fixed;
+    background-size: cover;
+    color: #fff;
+}
+
+.overlay {
+    background: rgba(0,0,0,0.7);
+    min-height: 100vh;
+    padding: 20px;
+}
+
+h1 {
+    text-align: center;
+    font-size: 30px;
+    margin-bottom: 20px;
+    color: #FFD400;
+    text-shadow: 2px 2px 6px black;
+}
+
+.card {
+    background: rgba(255,255,255,0.15);
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 15px;
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
+.card-title {
+    font-size: 20px;
+    font-weight: bold;
+    color: #FFD400;
+}
+
+.card-price {
+    font-size: 16px;
+    margin: 5px 0 10px;
+}
+
+button.add {
+    background: #FFD400;
+    border: none;
+    padding: 10px;
+    width: 100%;
+    border-radius: 8px;
+    font-size: 16px;
+    color: black;
+    font-weight: bold;
+}
+
+button.add:hover {
+    background: #ffea46;
+}
+
+#carrinho {
+    background: rgba(255,255,255,0.2);
+    padding: 15px;
+    border-radius: 12px;
+    margin-top: 20px;
+}
+
+.total {
+    text-align: center;
+    font-size: 26px;
+    color: #00ff8c;
+    margin-top: 20px;
+    font-weight: bold;
+}
+
+select, input {
+    width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+    border: none;
+    margin-top: 5px;
+    font-size: 16px;
+}
+
+button.finalizar {
+    width: 100%;
+    padding: 15px;
+    margin-top: 20px;
+    background: #00ff8c;
+    border: none;
+    border-radius: 8px;
+    color: black;
+    font-weight: bold;
+    font-size: 20px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="overlay">
+
+<h1>🍔 DANDRENKS - Cardápio Digital</h1>
+
+<div id="produtos"></div>
+
+<div id="carrinho">
+    <h2>Carrinho</h2>
+    <div id="listaCarrinho"></div>
+</div>
+
+<div class="card">
+<h2>Entrega</h2>
+<select id="entrega" onchange="calcularTotal(); mostrarEndereco()">
+    <option value="0">Retirar no local</option>
+    <option value="5">Entrega — R$5</option>
+</select>
+
+<div id="enderecoBox" style="display:none;">
+    <label>Endereço:</label>
+    <input type="text" id="endereco" placeholder="Rua, número, bairro">
+</div>
+</div>
+
+<div class="card">
+<h2>Pagamento</h2>
+<select id="pagamento" onchange="mostrarTroco()">
+    <option value="pix">Pix</option>
+    <option value="dinheiro">Dinheiro</option>
+</select>
+
+<div id="trocoBox" style="display:none;">
+    <label>Troco para quanto?</label>
+    <input type="number" id="troco">
+</div>
+</div>
+
+<div class="total" id="total">Total: R$0,00</div>
+
+<button class="finalizar" onclick="finalizarPedido()">📲 Enviar pedido no WhatsApp</button>
+
+</div>
+
+<script>
+let carrinho = [];
+
+function carregarProdutos() {
+    let produtos = JSON.parse(localStorage.getItem("lanches")) || [];
+
+    let area = document.getElementById("produtos");
+    area.innerHTML = "";
+
+    produtos.forEach((p, index) => {
+        area.innerHTML += `
+        <div class="card">
+            <div class="card-title">${p.nome}</div>
+            <div class="card-price">R$${p.preco}</div>
+            <button class="add" onclick="addCarrinho('${p.nome}', ${p.preco})">Adicionar</button>
+        </div>`;
+    });
+}
+
+function addCarrinho(nome, preco) {
+    carrinho.push({nome, preco});
+    atualizarCarrinho();
+}
+
+function atualizarCarrinho() {
+    let lista = document.getElementById("listaCarrinho");
+    lista.innerHTML = "";
+
+    carrinho.forEach((item, i) => {
+        lista.innerHTML += `
+            <p>${item.nome} — R$${item.preco}
+            <button onclick="remover(${i})" style="margin-left:10px;background:#ff4444;color:#fff;border:none;border-radius:6px;padding:5px;">X</button>
+            </p>`;
+    });
+
+    calcularTotal();
+}
+
+function remover(i){
+    carrinho.splice(i, 1);
+    atualizarCarrinho();
+}
+
+function mostrarEndereco(){
+    document.getElementById("enderecoBox").style.display =
+        document.getElementById("entrega").value == "5" ? "block" : "none";
+}
+
+function mostrarTroco(){
+    document.getElementById("trocoBox").style.display =
+        document.getElementById("pagamento").value == "dinheiro" ? "block" : "none";
+}
+
+function calcularTotal(){
+    let total = 0;
+    carrinho.forEach(c => total += c.preco);
+
+    let entrega = Number(document.getElementById("entrega").value);
+    total += entrega;
+
+    document.getElementById("total").innerText = "Total: R$" + total.toFixed(2);
+    return total;
+}
+
+function finalizarPedido(){
+    let total = calcularTotal();
+    let endereco = document.getElementById("endereco").value;
+    let pagamento = document.getElementById("pagamento").value;
+    let troco = document.getElementById("troco").value;
+
+    let msg = "🍔 *NOVO PEDIDO - DANDRENKS*\n\n";
+
+    carrinho.forEach(c => {
+        msg += `• ${c.nome} — R$${c.preco}\n`;
+    });
+
+    msg += `\nEntrega: ${document.getElementById("entrega").value == "5" ? "Sim" : "Não"}`;
+
+    if(endereco) msg += `\nEndereço: ${endereco}`;
+
+    msg += `\nPagamento: ${pagamento}`;
+    if(troco) msg += `\nTroco para: R$${troco}`;
+
+    msg += `\n\nTOTAL: R$${total.toFixed(2)}`;
+
+    let url = "https://wa.me/5511963266825?text=" + encodeURIComponent(msg);
+    window.open(url, "_blank");
+}
+
+carregarProdutos();
+</script>
+
+</body>
+</html>
